@@ -39,6 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { format } from 'date-fns';
 
 interface JobApplication {
   id: string
@@ -114,25 +115,25 @@ export default function JobTracker() {
   const [jobs, setJobs] = useState<JobApplication[]>([
     {
       id: "1",
-      company: "Moonbeam Studios",
+      company: "ABC Enterprises",
       position: "Senior Frontend Developer",
       status: "interview",
-      appliedDate: "2024-01-15",
-      salary: "$95,000",
-      location: "San Francisco, CA",
+      appliedDate: "2025-04-15",
+      salary: "7600000 LPA",
+      location: "Bangalore, India",
       notes: "Great culture fit, technical interview scheduled for next week",
       aiInsight: "Strong match! Your React expertise aligns perfectly with their tech stack.",
-      interviewDate: "2024-01-22",
+      interviewDate: "2025-01-22",
       companyRating: 4.2,
       matchScore: 92,
       priority: "high",
     },
     {
       id: "2",
-      company: "Wildflower Tech",
+      company: "Wild Tech",
       position: "Full Stack Engineer",
       status: "applied",
-      appliedDate: "2024-01-12",
+      appliedDate: "2025-06-12",
       salary: "$85,000",
       location: "Remote",
       aiInsight: "Good opportunity for growth. They value versatile developers.",
@@ -142,10 +143,10 @@ export default function JobTracker() {
     },
     {
       id: "3",
-      company: "Crimson Dynamics",
+      company: "Crimson Club",
       position: "Product Designer",
       status: "offer",
-      appliedDate: "2024-01-08",
+      appliedDate: "2025-03-08",
       salary: "$78,000",
       location: "New York, NY",
       notes: "Received offer! Need to respond by Friday",
@@ -159,7 +160,7 @@ export default function JobTracker() {
       company: "TechFlow Inc",
       position: "Backend Developer",
       status: "rejected",
-      appliedDate: "2024-01-05",
+      appliedDate: "2025-03-05",
       salary: "$90,000",
       location: "Austin, TX",
       notes: "Not a good fit for their current needs",
@@ -208,17 +209,17 @@ export default function JobTracker() {
 
   const [companyInsights] = useState<CompanyInsight[]>([
     {
-      company: "Moonbeam Studios",
+      company: "ABC Enterprises",
       industry: "Creative Technology",
       size: "50-200 employees",
       culture: "Collaborative, innovative, work-life balance focused",
       benefits: ["Health Insurance", "Flexible PTO", "Remote Work", "Learning Budget"],
       glassdoorRating: 4.2,
-      salaryRange: "$80K - $120K",
+      salaryRange: "64L - 96L",
       growthRate: "25% YoY",
     },
     {
-      company: "Wildflower Tech",
+      company: "Wild Tech",
       industry: "SaaS",
       size: "200-500 employees",
       culture: "Fast-paced, results-driven, growth-oriented",
@@ -228,7 +229,7 @@ export default function JobTracker() {
       growthRate: "40% YoY",
     },
     {
-      company: "Crimson Dynamics",
+      company: "Crimson Club",
       industry: "Design & UX",
       size: "20-50 employees",
       culture: "Creative, flexible, client-focused",
@@ -242,9 +243,9 @@ export default function JobTracker() {
   const [networkContacts] = useState<NetworkContact[]>([
     {
       id: "1",
-      name: "Sarah Chen",
+      name: "Sara",
       position: "Senior Developer",
-      company: "Moonbeam Studios",
+      company: "Moon Studios",
       relationship: "Former Colleague",
       contactMethod: "LinkedIn",
       notes: "Referred me to the current opening. Very supportive and knowledgeable about company culture.",
@@ -252,9 +253,9 @@ export default function JobTracker() {
     },
     {
       id: "2",
-      name: "Marcus Johnson",
+      name: "Soham",
       position: "Product Manager",
-      company: "Wildflower Tech",
+      company: "Wild Tech",
       relationship: "Conference Contact",
       contactMethod: "Email",
       notes: "Met at TechConf 2024. Interested in discussing product development approaches.",
@@ -262,9 +263,9 @@ export default function JobTracker() {
     },
     {
       id: "3",
-      name: "Emily Rodriguez",
+      name: "Emily ",
       position: "Design Director",
-      company: "Crimson Dynamics",
+      company: "Crimson Club",
       relationship: "Mentor",
       contactMethod: "Phone",
       notes: "Provides great career advice and industry insights. Helped with portfolio review.",
@@ -535,7 +536,7 @@ export default function JobTracker() {
                               <p className="text-sm text-slate-600">{job.company}</p>
                             </div>
                             <div className="text-xs text-slate-500">
-                              {new Date(job.appliedDate).toLocaleDateString()}
+                            {format(new Date(job.appliedDate), 'yyyy-MM-dd')}
                             </div>
                           </div>
                         ))}
@@ -629,7 +630,7 @@ export default function JobTracker() {
                   </div>
                 </div>
 
-                {/* Add Job Form */}
+                {/* To Add Job Form */}
                 {showAddForm && (
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-violet-100 to-purple-100 rounded-3xl transform rotate-1"></div>
@@ -1392,15 +1393,15 @@ export default function JobTracker() {
                           <h4 className="font-bold text-slate-900 mb-2">Salary Range Distribution</h4>
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">$80K - $100K</span>
+                              <span className="text-sm text-slate-700">64L - 80L</span>
                               <span className="text-sm font-semibold text-slate-900">60%</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">$60K - $80K</span>
+                              <span className="text-sm text-slate-700">48L - 64L</span>
                               <span className="text-sm font-semibold text-slate-900">25%</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">$100K+</span>
+                              <span className="text-sm text-slate-700">80L+</span>
                               <span className="text-sm font-semibold text-slate-900">15%</span>
                             </div>
                           </div>
