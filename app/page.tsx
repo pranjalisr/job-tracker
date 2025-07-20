@@ -39,7 +39,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { format } from 'date-fns';
 
 interface JobApplication {
   id: string
@@ -61,7 +60,7 @@ interface InterviewQuestion {
   id: string
   question: string
   category: string
-  difficulty: "Easy" | "Medium" | "Hard"
+  difficulty: "Easy" | "Medium | Hard"
   jobRole?: string
 }
 
@@ -107,6 +106,13 @@ const difficultyColors = {
 }
 
 export default function JobTracker() {
+  // Add these new state variables
+  const [selectedJob, setSelectedJob] = useState<JobApplication | null>(null)
+  const [showJobDetails, setShowJobDetails] = useState(false)
+  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("date")
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
+
   const [activeTab, setActiveTab] = useState("dashboard")
   const [activeView, setActiveView] = useState("kanban")
   const [showAddForm, setShowAddForm] = useState(false)
@@ -115,25 +121,25 @@ export default function JobTracker() {
   const [jobs, setJobs] = useState<JobApplication[]>([
     {
       id: "1",
-      company: "ABC Enterprises",
+      company: "Moonbeam Studios",
       position: "Senior Frontend Developer",
       status: "interview",
-      appliedDate: "2025-04-15",
-      salary: "7600000 LPA",
-      location: "Bangalore, India",
+      appliedDate: "2024-01-15",
+      salary: "$95,000",
+      location: "San Francisco, CA",
       notes: "Great culture fit, technical interview scheduled for next week",
       aiInsight: "Strong match! Your React expertise aligns perfectly with their tech stack.",
-      interviewDate: "2025-01-22",
+      interviewDate: "2024-01-22",
       companyRating: 4.2,
       matchScore: 92,
       priority: "high",
     },
     {
       id: "2",
-      company: "Wild Tech",
+      company: "Wildflower Tech",
       position: "Full Stack Engineer",
       status: "applied",
-      appliedDate: "2025-06-12",
+      appliedDate: "2024-01-12",
       salary: "$85,000",
       location: "Remote",
       aiInsight: "Good opportunity for growth. They value versatile developers.",
@@ -143,10 +149,10 @@ export default function JobTracker() {
     },
     {
       id: "3",
-      company: "Crimson Club",
+      company: "Crimson Dynamics",
       position: "Product Designer",
       status: "offer",
-      appliedDate: "2025-03-08",
+      appliedDate: "2024-01-08",
       salary: "$78,000",
       location: "New York, NY",
       notes: "Received offer! Need to respond by Friday",
@@ -160,7 +166,7 @@ export default function JobTracker() {
       company: "TechFlow Inc",
       position: "Backend Developer",
       status: "rejected",
-      appliedDate: "2025-03-05",
+      appliedDate: "2024-01-05",
       salary: "$90,000",
       location: "Austin, TX",
       notes: "Not a good fit for their current needs",
@@ -209,17 +215,17 @@ export default function JobTracker() {
 
   const [companyInsights] = useState<CompanyInsight[]>([
     {
-      company: "ABC Enterprises",
+      company: "Moonbeam Studios",
       industry: "Creative Technology",
       size: "50-200 employees",
       culture: "Collaborative, innovative, work-life balance focused",
       benefits: ["Health Insurance", "Flexible PTO", "Remote Work", "Learning Budget"],
       glassdoorRating: 4.2,
-      salaryRange: "64L - 96L",
+      salaryRange: "$80K - $120K",
       growthRate: "25% YoY",
     },
     {
-      company: "Wild Tech",
+      company: "Wildflower Tech",
       industry: "SaaS",
       size: "200-500 employees",
       culture: "Fast-paced, results-driven, growth-oriented",
@@ -229,7 +235,7 @@ export default function JobTracker() {
       growthRate: "40% YoY",
     },
     {
-      company: "Crimson Club",
+      company: "Crimson Dynamics",
       industry: "Design & UX",
       size: "20-50 employees",
       culture: "Creative, flexible, client-focused",
@@ -243,9 +249,9 @@ export default function JobTracker() {
   const [networkContacts] = useState<NetworkContact[]>([
     {
       id: "1",
-      name: "Sara",
+      name: "Sarah Chen",
       position: "Senior Developer",
-      company: "Moon Studios",
+      company: "Moonbeam Studios",
       relationship: "Former Colleague",
       contactMethod: "LinkedIn",
       notes: "Referred me to the current opening. Very supportive and knowledgeable about company culture.",
@@ -253,9 +259,9 @@ export default function JobTracker() {
     },
     {
       id: "2",
-      name: "Soham",
+      name: "Marcus Johnson",
       position: "Product Manager",
-      company: "Wild Tech",
+      company: "Wildflower Tech",
       relationship: "Conference Contact",
       contactMethod: "Email",
       notes: "Met at TechConf 2024. Interested in discussing product development approaches.",
@@ -263,9 +269,9 @@ export default function JobTracker() {
     },
     {
       id: "3",
-      name: "Emily ",
+      name: "Emily Rodriguez",
       position: "Design Director",
-      company: "Crimson Club",
+      company: "Crimson Dynamics",
       relationship: "Mentor",
       contactMethod: "Phone",
       notes: "Provides great career advice and industry insights. Helped with portfolio review.",
@@ -282,6 +288,31 @@ export default function JobTracker() {
     notes: "",
     priority: "medium" as const,
   })
+
+  // Add these new functions
+  const deleteJob = (id: string) => {
+    setJobs(jobs.filter((job) => job.id !== id))
+  }
+
+  const duplicateJob = (job: JobApplication) => {
+    const newJob = {
+      ...job,
+      id: Date.now().toString(),
+      company: `${job.company} (Copy)`,
+      appliedDate: new Date().toISOString().split("T")[0],
+    }
+    setJobs([newJob, ...jobs])
+  }
+
+  const exportData = () => {
+    const dataStr = JSON.stringify(jobs, null, 2)
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
+    const exportFileDefaultName = "job-applications.json"
+    const linkElement = document.createElement("a")
+    linkElement.setAttribute("href", dataUri)
+    linkElement.setAttribute("download", exportFileDefaultName)
+    linkElement.click()
+  }
 
   const addJob = () => {
     if (newJob.company && newJob.position) {
@@ -327,6 +358,25 @@ export default function JobTracker() {
       job.position.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  const filteredAndSortedJobs = filteredJobs
+    .filter((job) => filterStatus === "all" || job.status === filterStatus)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "company":
+          return a.company.localeCompare(b.company)
+        case "position":
+          return a.position.localeCompare(b.position)
+        case "salary":
+          return (
+            Number.parseInt(b.salary?.replace(/\D/g, "") || "0") - Number.parseInt(a.salary?.replace(/\D/g, "") || "0")
+          )
+        case "match":
+          return (b.matchScore || 0) - (a.matchScore || 0)
+        default:
+          return new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime()
+      }
+    })
+
   const stats = {
     total: jobs.length,
     applied: jobs.filter((j) => j.status === "applied").length,
@@ -345,47 +395,50 @@ export default function JobTracker() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Unique Header with Diagonal Design */}
+      {/* Mobile-Responsive Header with Diagonal Design */}
       <div className="relative bg-white border-b-4 border-slate-900 overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-32 bg-gradient-to-l from-violet-500 to-purple-600 transform rotate-12 translate-x-24 -translate-y-8"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-24 bg-gradient-to-r from-emerald-400 to-cyan-500 transform -rotate-6 -translate-x-16 translate-y-6"></div>
+        <div className="absolute top-0 right-0 w-48 md:w-96 h-16 md:h-32 bg-gradient-to-l from-violet-500 to-purple-600 transform rotate-12 translate-x-12 md:translate-x-24 -translate-y-4 md:-translate-y-8"></div>
+        <div className="absolute bottom-0 left-0 w-32 md:w-64 h-12 md:h-24 bg-gradient-to-r from-emerald-400 to-cyan-500 transform -rotate-6 -translate-x-8 md:-translate-x-16 translate-y-3 md:translate-y-6"></div>
 
-        <div className="relative px-8 py-12">
+        <div className="relative px-4 md:px-8 py-6 md:py-12">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+              <div className="flex items-center space-x-3 md:space-x-6">
                 <div className="relative">
-                  <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center transform -rotate-3 shadow-xl">
-                    <Briefcase className="w-8 h-8 text-white" />
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center transform -rotate-3 shadow-xl">
+                    <Briefcase className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-3 h-3 text-slate-900" />
+                  <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-4 h-4 md:w-6 md:h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-2 h-2 md:w-3 md:h-3 text-slate-900" />
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+                  <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">
                     CAREER<span className="text-violet-600">FLOW</span>
                   </h1>
-                  <p className="text-slate-600 font-medium text-lg">Smart Job Tracking & Career Intelligence</p>
+                  <p className="text-slate-600 font-medium text-sm md:text-lg">
+                    Smart Job Tracking & Career Intelligence
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
+                <div className="relative flex-1 sm:flex-none">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 md:w-5 md:h-5" />
                   <Input
                     placeholder="Search jobs..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-64 border-2 border-slate-200 focus:border-violet-500 rounded-xl"
+                    className="pl-8 md:pl-10 w-full sm:w-48 md:w-64 border-2 border-slate-200 focus:border-violet-500 rounded-xl text-sm md:text-base"
                   />
                 </div>
                 <Button
                   onClick={() => setShowAddForm(true)}
-                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transform hover:scale-105 transition-all"
+                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold shadow-lg transform hover:scale-105 transition-all text-sm md:text-base"
                 >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add Job
+                  <Plus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Add Job</span>
+                  <span className="sm:hidden">Add</span>
                 </Button>
               </div>
             </div>
@@ -393,122 +446,132 @@ export default function JobTracker() {
         </div>
       </div>
 
-      {/* Navigation Tabs with Unique Design */}
+      {/* Mobile-Responsive Navigation Tabs */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-7 bg-transparent border-b-0 h-auto p-0">
-              <TabsTrigger
-                value="dashboard"
-                className="flex items-center space-x-2 py-4 px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none"
-              >
-                <BarChart3 className="w-5 h-5" />
-                <span className="font-semibold">Dashboard</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="applications"
-                className="flex items-center space-x-2 py-4 px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none"
-              >
-                <Briefcase className="w-5 h-5" />
-                <span className="font-semibold">Applications</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="interview-prep"
-                className="flex items-center space-x-2 py-4 px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none"
-              >
-                <Brain className="w-5 h-5" />
-                <span className="font-semibold">Interview Prep</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="company-research"
-                className="flex items-center space-x-2 py-4 px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none"
-              >
-                <Building className="w-5 h-5" />
-                <span className="font-semibold">Research</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="resume-analysis"
-                className="flex items-center space-x-2 py-4 px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none"
-              >
-                <FileText className="w-5 h-5" />
-                <span className="font-semibold">Resume AI</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="networking"
-                className="flex items-center space-x-2 py-4 px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none"
-              >
-                <Users className="w-5 h-5" />
-                <span className="font-semibold">Network</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="analytics"
-                className="flex items-center space-x-2 py-4 px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none"
-              >
-                <TrendingUp className="w-5 h-5" />
-                <span className="font-semibold">Analytics</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="grid grid-cols-7 bg-transparent border-b-0 h-auto p-0 min-w-max">
+                <TabsTrigger
+                  value="dashboard"
+                  className="flex items-center space-x-1 md:space-x-2 py-3 md:py-4 px-3 md:px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none whitespace-nowrap"
+                >
+                  <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Dashboard</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="applications"
+                  className="flex items-center space-x-1 md:space-x-2 py-3 md:py-4 px-3 md:px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none whitespace-nowrap"
+                >
+                  <Briefcase className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Apps</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="interview-prep"
+                  className="flex items-center space-x-1 md:space-x-2 py-3 md:py-4 px-3 md:px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none whitespace-nowrap"
+                >
+                  <Brain className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Interview</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="company-research"
+                  className="flex items-center space-x-1 md:space-x-2 py-3 md:py-4 px-3 md:px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none whitespace-nowrap"
+                >
+                  <Building className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Research</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="resume-analysis"
+                  className="flex items-center space-x-1 md:space-x-2 py-3 md:py-4 px-3 md:px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none whitespace-nowrap"
+                >
+                  <FileText className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Resume</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="networking"
+                  className="flex items-center space-x-1 md:space-x-2 py-3 md:py-4 px-3 md:px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none whitespace-nowrap"
+                >
+                  <Users className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Network</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="analytics"
+                  className="flex items-center space-x-1 md:space-x-2 py-3 md:py-4 px-3 md:px-6 border-b-4 border-transparent data-[state=active]:border-violet-600 data-[state=active]:bg-transparent rounded-none whitespace-nowrap"
+                >
+                  <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="font-semibold text-xs md:text-sm">Analytics</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <div className="py-8">
               {/* Dashboard Tab */}
               <TabsContent value="dashboard" className="space-y-8 mt-0">
-                {/* Stats Overview */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {/* Mobile-Responsive Stats Overview */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-200 rounded-3xl transform rotate-1"></div>
-                    <div className="relative bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center">
-                          <Target className="w-6 h-6 text-white" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl md:rounded-3xl transform rotate-1"></div>
+                    <div className="relative bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-lg">
+                      <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                        <div className="w-8 h-8 md:w-12 md:h-12 bg-blue-500 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto md:mx-0">
+                          <Target className="w-4 h-4 md:w-6 md:h-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-3xl font-black text-slate-900">{stats.total}</p>
-                          <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Applications</p>
+                        <div className="text-center md:text-left">
+                          <p className="text-xl md:text-3xl font-black text-slate-900">{stats.total}</p>
+                          <p className="text-xs md:text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                            Applications
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-3xl transform -rotate-1"></div>
-                    <div className="relative bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-yellow-500 rounded-2xl flex items-center justify-center">
-                          <Clock className="w-6 h-6 text-white" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-2xl md:rounded-3xl transform -rotate-1"></div>
+                    <div className="relative bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-lg">
+                      <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                        <div className="w-8 h-8 md:w-12 md:h-12 bg-yellow-500 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto md:mx-0">
+                          <Clock className="w-4 h-4 md:w-6 md:h-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-3xl font-black text-slate-900">{stats.interviews}</p>
-                          <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Interviews</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-100 to-green-200 rounded-3xl transform rotate-1"></div>
-                    <div className="relative bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center">
-                          <CheckCircle className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-3xl font-black text-slate-900">{stats.offers}</p>
-                          <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Offers</p>
+                        <div className="text-center md:text-left">
+                          <p className="text-xl md:text-3xl font-black text-slate-900">{stats.interviews}</p>
+                          <p className="text-xs md:text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                            Interviews
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-100 to-violet-200 rounded-3xl transform -rotate-1"></div>
-                    <div className="relative bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-violet-500 rounded-2xl flex items-center justify-center">
-                          <Zap className="w-6 h-6 text-white" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-100 to-green-200 rounded-2xl md:rounded-3xl transform rotate-1"></div>
+                    <div className="relative bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-lg">
+                      <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                        <div className="w-8 h-8 md:w-12 md:h-12 bg-green-500 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto md:mx-0">
+                          <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-white" />
                         </div>
-                        <div>
-                          <p className="text-3xl font-black text-slate-900">{stats.avgMatchScore}%</p>
-                          <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Avg Match</p>
+                        <div className="text-center md:text-left">
+                          <p className="text-xl md:text-3xl font-black text-slate-900">{stats.offers}</p>
+                          <p className="text-xs md:text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                            Offers
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-100 to-violet-200 rounded-2xl md:rounded-3xl transform -rotate-1"></div>
+                    <div className="relative bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-lg">
+                      <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                        <div className="w-8 h-8 md:w-12 md:h-12 bg-violet-500 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto md:mx-0">
+                          <Zap className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                        </div>
+                        <div className="text-center md:text-left">
+                          <p className="text-xl md:text-3xl font-black text-slate-900">{stats.avgMatchScore}%</p>
+                          <p className="text-xs md:text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                            Avg Match
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -536,7 +599,7 @@ export default function JobTracker() {
                               <p className="text-sm text-slate-600">{job.company}</p>
                             </div>
                             <div className="text-xs text-slate-500">
-                            {format(new Date(job.appliedDate), 'yyyy-MM-dd')}
+                              {new Date(job.appliedDateFormatted).toLocaleDateString()}
                             </div>
                           </div>
                         ))}
@@ -630,7 +693,66 @@ export default function JobTracker() {
                   </div>
                 </div>
 
-                {/* To Add Job Form */}
+                {/* Filter and Sort Bar */}
+                <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 md:p-6 shadow-lg mb-6">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between space-y-3 sm:space-y-0 sm:space-x-4">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <label className="text-sm font-semibold text-slate-600">Filter:</label>
+                        <Select value={filterStatus} onValueChange={setFilterStatus}>
+                          <SelectTrigger className="w-32 border border-slate-200 rounded-lg text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="applied">Applied</SelectItem>
+                            <SelectItem value="interview">Interview</SelectItem>
+                            <SelectItem value="offer">Offer</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <label className="text-sm font-semibold text-slate-600">Sort:</label>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                          <SelectTrigger className="w-32 border border-slate-200 rounded-lg text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="date">Date</SelectItem>
+                            <SelectItem value="company">Company</SelectItem>
+                            <SelectItem value="position">Position</SelectItem>
+                            <SelectItem value="salary">Salary</SelectItem>
+                            <SelectItem value="match">Match Score</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={exportData}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-lg border-slate-200 bg-transparent"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        Export
+                      </Button>
+                      <Button
+                        onClick={() => setActiveView(activeView === "kanban" ? "list" : "kanban")}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-lg border-slate-200 bg-transparent sm:hidden"
+                      >
+                        {activeView === "kanban" ? "List" : "Kanban"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Add Job Form */}
                 {showAddForm && (
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-violet-100 to-purple-100 rounded-3xl transform rotate-1"></div>
@@ -754,47 +876,54 @@ export default function JobTracker() {
                   </div>
                 )}
 
-                {/* Kanban Board View */}
+                {/* Mobile-Responsive Kanban Board View */}
                 {activeView === "kanban" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     {Object.entries(statusConfig).map(([status, config]) => (
                       <div key={status} className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: config.color }}></div>
-                            <h3 className="font-bold text-slate-900 uppercase tracking-wide text-sm">{config.label}</h3>
+                          <div className="flex items-center space-x-2 md:space-x-3">
+                            <div
+                              className="w-3 h-3 md:w-4 md:h-4 rounded-full"
+                              style={{ backgroundColor: config.color }}
+                            ></div>
+                            <h3 className="font-bold text-slate-900 uppercase tracking-wide text-xs md:text-sm">
+                              {config.label}
+                            </h3>
                             <span className="bg-slate-200 text-slate-700 px-2 py-1 rounded-full text-xs font-semibold">
                               {getJobsByStatus(status).length}
                             </span>
                           </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3 md:space-y-4">
                           {getJobsByStatus(status).map((job, index) => (
                             <div
                               key={job.id}
-                              className="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1"
+                              className="bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1"
                               style={{
                                 borderLeftColor: config.color,
                                 borderLeftWidth: "4px",
                               }}
                             >
-                              <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1">
-                                  <h4 className="font-bold text-slate-900 text-lg leading-tight mb-1">
+                              <div className="flex items-start justify-between mb-3 md:mb-4">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-slate-900 text-base md:text-lg leading-tight mb-1 truncate">
                                     {job.position}
                                   </h4>
-                                  <p className="text-slate-600 font-medium">{job.company}</p>
+                                  <p className="text-slate-600 font-medium text-sm md:text-base truncate">
+                                    {job.company}
+                                  </p>
                                   {job.location && (
-                                    <div className="flex items-center mt-2 text-sm text-slate-500">
-                                      <MapPin className="w-3 h-3 mr-1" />
-                                      {job.location}
+                                    <div className="flex items-center mt-2 text-xs md:text-sm text-slate-500">
+                                      <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                                      <span className="truncate">{job.location}</span>
                                     </div>
                                   )}
                                 </div>
-                                <div className="flex flex-col items-end space-y-2">
+                                <div className="flex flex-col items-end space-y-1 md:space-y-2 ml-2">
                                   <div
-                                    className="px-2 py-1 rounded-full text-xs font-semibold"
+                                    className="px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
                                     style={{
                                       backgroundColor: priorityConfig[job.priority].bg,
                                       color: priorityConfig[job.priority].color,
@@ -811,53 +940,53 @@ export default function JobTracker() {
                                 </div>
                               </div>
 
-                              <div className="space-y-3">
+                              <div className="space-y-2 md:space-y-3">
                                 {job.salary && (
-                                  <div className="flex items-center text-sm text-slate-600">
-                                    <DollarSign className="w-4 h-4 mr-2 text-green-600" />
-                                    {job.salary}
+                                  <div className="flex items-center text-xs md:text-sm text-slate-600">
+                                    <DollarSign className="w-3 h-3 md:w-4 md:h-4 mr-2 text-green-600 flex-shrink-0" />
+                                    <span className="truncate">{job.salary}</span>
                                   </div>
                                 )}
 
-                                <div className="flex items-center text-sm text-slate-600">
-                                  <Calendar className="w-4 h-4 mr-2" />
-                                  Applied {new Date(job.appliedDate).toLocaleDateString()}
+                                <div className="flex items-center text-xs md:text-sm text-slate-600">
+                                  <Calendar className="w-3 h-3 md:w-4 md:h-4 mr-2 flex-shrink-0" />
+                                  <span>Applied {new Date(job.appliedDate).toLocaleDateString()}</span>
                                 </div>
 
                                 {job.companyRating && (
-                                  <div className="flex items-center text-sm text-slate-600">
-                                    <Building className="w-4 h-4 mr-2" />
-                                    Rating: {job.companyRating}/5.0
+                                  <div className="flex items-center text-xs md:text-sm text-slate-600">
+                                    <Building className="w-3 h-3 md:w-4 md:h-4 mr-2 flex-shrink-0" />
+                                    <span>Rating: {job.companyRating}/5.0</span>
                                   </div>
                                 )}
                               </div>
 
                               {job.notes && (
-                                <div className="mt-4 p-3 bg-slate-50 rounded-xl">
-                                  <p className="text-sm text-slate-700">{job.notes}</p>
+                                <div className="mt-3 md:mt-4 p-3 bg-slate-50 rounded-xl">
+                                  <p className="text-xs md:text-sm text-slate-700 line-clamp-2">{job.notes}</p>
                                 </div>
                               )}
 
                               {job.aiInsight && (
-                                <div className="mt-4 p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                                <div className="mt-3 md:mt-4 p-3 md:p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
                                   <div className="flex items-start space-x-2">
-                                    <Sparkles className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" />
-                                    <div>
+                                    <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-violet-600 mt-0.5 flex-shrink-0" />
+                                    <div className="min-w-0">
                                       <p className="text-xs font-bold text-violet-700 uppercase tracking-wide mb-1">
                                         AI INSIGHT
                                       </p>
-                                      <p className="text-sm text-slate-700">{job.aiInsight}</p>
+                                      <p className="text-xs md:text-sm text-slate-700 line-clamp-3">{job.aiInsight}</p>
                                     </div>
                                   </div>
                                 </div>
                               )}
 
-                              <div className="mt-4 pt-4 border-t border-slate-100">
+                              <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-slate-100">
                                 <Select
                                   value={job.status}
                                   onValueChange={(value: any) => updateJobStatus(job.id, value)}
                                 >
-                                  <SelectTrigger className="w-full border border-slate-200 rounded-lg text-sm">
+                                  <SelectTrigger className="w-full border border-slate-200 rounded-lg text-xs md:text-sm">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -872,11 +1001,11 @@ export default function JobTracker() {
                           ))}
 
                           {getJobsByStatus(status).length === 0 && (
-                            <div className="text-center py-8 text-slate-400">
-                              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <Briefcase className="w-6 h-6" />
+                            <div className="text-center py-6 md:py-8 text-slate-400">
+                              <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-3">
+                                <Briefcase className="w-5 h-5 md:w-6 md:h-6" />
                               </div>
-                              <p className="text-sm">No {config.label.toLowerCase()} applications</p>
+                              <p className="text-xs md:text-sm">No {config.label.toLowerCase()} applications</p>
                             </div>
                           )}
                         </div>
@@ -1393,15 +1522,15 @@ export default function JobTracker() {
                           <h4 className="font-bold text-slate-900 mb-2">Salary Range Distribution</h4>
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">64L - 80L</span>
+                              <span className="text-sm text-slate-700">$80K - $100K</span>
                               <span className="text-sm font-semibold text-slate-900">60%</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">48L - 64L</span>
+                              <span className="text-sm text-slate-700">$60K - $80K</span>
                               <span className="text-sm font-semibold text-slate-900">25%</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">80L+</span>
+                              <span className="text-sm text-slate-700">$100K+</span>
                               <span className="text-sm font-semibold text-slate-900">15%</span>
                             </div>
                           </div>
@@ -1475,6 +1604,107 @@ export default function JobTracker() {
           </Tabs>
         </div>
       </div>
+
+      {/* Mobile Job Details Modal */}
+      {showJobDetails && selectedJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-slate-900">Job Details</h3>
+                <Button variant="outline" size="sm" onClick={() => setShowJobDetails(false)} className="rounded-full">
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-lg font-bold text-slate-900">{selectedJob.position}</h4>
+                  <p className="text-slate-600 font-medium">{selectedJob.company}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-1">Status</p>
+                    <div
+                      className="px-3 py-1 rounded-full text-sm font-semibold inline-block"
+                      style={{
+                        backgroundColor: statusConfig[selectedJob.status].bg,
+                        color: statusConfig[selectedJob.status].color,
+                      }}
+                    >
+                      {statusConfig[selectedJob.status].label}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-1">Priority</p>
+                    <div
+                      className="px-3 py-1 rounded-full text-sm font-semibold inline-block"
+                      style={{
+                        backgroundColor: priorityConfig[selectedJob.priority].bg,
+                        color: priorityConfig[selectedJob.priority].color,
+                      }}
+                    >
+                      {selectedJob.priority.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedJob.salary && (
+                  <div>
+                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-1">Salary</p>
+                    <p className="text-slate-900">{selectedJob.salary}</p>
+                  </div>
+                )}
+
+                {selectedJob.location && (
+                  <div>
+                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-1">Location</p>
+                    <p className="text-slate-900">{selectedJob.location}</p>
+                  </div>
+                )}
+
+                {selectedJob.notes && (
+                  <div>
+                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-1">Notes</p>
+                    <p className="text-slate-700">{selectedJob.notes}</p>
+                  </div>
+                )}
+
+                {selectedJob.aiInsight && (
+                  <div className="p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                    <div className="flex items-start space-x-2">
+                      <Sparkles className="w-4 h-4 text-violet-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-violet-700 uppercase tracking-wide mb-1">AI INSIGHT</p>
+                        <p className="text-sm text-slate-700">{selectedJob.aiInsight}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex space-x-2 pt-4">
+                  <Button onClick={() => duplicateJob(selectedJob)} variant="outline" size="sm" className="flex-1">
+                    Duplicate
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      deleteJob(selectedJob.id)
+                      setShowJobDetails(false)
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
