@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Job Tracker',
-  description: 'Created with Nextjs, Tailwind',
+  description: 'Job Tracker',
   
 }
 

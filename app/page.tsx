@@ -39,6 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { format } from 'date-fns';
 
 interface JobApplication {
   id: string
@@ -124,12 +125,12 @@ export default function JobTracker() {
       company: "Moonbeam Studios",
       position: "Senior Frontend Developer",
       status: "interview",
-      appliedDate: "2024-01-15",
-      salary: "$95,000",
-      location: "San Francisco, CA",
+      appliedDate: "2025-01-15",
+      salary: "95,000",
+      location: "Bangalore, KA",
       notes: "Great culture fit, technical interview scheduled for next week",
       aiInsight: "Strong match! Your React expertise aligns perfectly with their tech stack.",
-      interviewDate: "2024-01-22",
+      interviewDate: "2025-01-22",
       companyRating: 4.2,
       matchScore: 92,
       priority: "high",
@@ -139,7 +140,7 @@ export default function JobTracker() {
       company: "Wildflower Tech",
       position: "Full Stack Engineer",
       status: "applied",
-      appliedDate: "2024-01-12",
+      appliedDate: "2025-01-12",
       salary: "$85,000",
       location: "Remote",
       aiInsight: "Good opportunity for growth. They value versatile developers.",
@@ -167,8 +168,8 @@ export default function JobTracker() {
       position: "Backend Developer",
       status: "rejected",
       appliedDate: "2024-01-05",
-      salary: "$90,000",
-      location: "Austin, TX",
+      salary: "9,00,000",
+      location: "Hyderabad, TN",
       notes: "Not a good fit for their current needs",
       companyRating: 3.8,
       matchScore: 65,
@@ -221,7 +222,7 @@ export default function JobTracker() {
       culture: "Collaborative, innovative, work-life balance focused",
       benefits: ["Health Insurance", "Flexible PTO", "Remote Work", "Learning Budget"],
       glassdoorRating: 4.2,
-      salaryRange: "$80K - $120K",
+      salaryRange: "80K - 120K",
       growthRate: "25% YoY",
     },
     {
@@ -249,7 +250,7 @@ export default function JobTracker() {
   const [networkContacts] = useState<NetworkContact[]>([
     {
       id: "1",
-      name: "Sarah Chen",
+      name: "Sara",
       position: "Senior Developer",
       company: "Moonbeam Studios",
       relationship: "Former Colleague",
@@ -259,7 +260,7 @@ export default function JobTracker() {
     },
     {
       id: "2",
-      name: "Marcus Johnson",
+      name: "Mira",
       position: "Product Manager",
       company: "Wildflower Tech",
       relationship: "Conference Contact",
@@ -269,7 +270,7 @@ export default function JobTracker() {
     },
     {
       id: "3",
-      name: "Emily Rodriguez",
+      name: "Ekta",
       position: "Design Director",
       company: "Crimson Dynamics",
       relationship: "Mentor",
@@ -599,8 +600,8 @@ export default function JobTracker() {
                               <p className="text-sm text-slate-600">{job.company}</p>
                             </div>
                             <div className="text-xs text-slate-500">
-                              {new Date(job.appliedDateFormatted).toLocaleDateString()}
-                            </div>
+                            {format(new Date(job.appliedDate), 'yyyy-MM-dd')}
+                           </div>  
                           </div>
                         ))}
                       </div>
@@ -1522,15 +1523,15 @@ export default function JobTracker() {
                           <h4 className="font-bold text-slate-900 mb-2">Salary Range Distribution</h4>
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">$80K - $100K</span>
+                              <span className="text-sm text-slate-700">80K - 100K</span>
                               <span className="text-sm font-semibold text-slate-900">60%</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">$60K - $80K</span>
+                              <span className="text-sm text-slate-700">60K - 80K</span>
                               <span className="text-sm font-semibold text-slate-900">25%</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-sm text-slate-700">$100K+</span>
+                              <span className="text-sm text-slate-700">100K+</span>
                               <span className="text-sm font-semibold text-slate-900">15%</span>
                             </div>
                           </div>
